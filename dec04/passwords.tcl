@@ -4,10 +4,10 @@
 #set fileId [open "test.txt"]
 #seek $fileId 0 start
 
-#set upper 378999
-#set lower 378999
-set upper 847060
-set lower 372304
+set upper 667777
+set lower 667777
+#set upper 847060
+#set lower 372304
 
 set pointer $lower
 set counter 0
