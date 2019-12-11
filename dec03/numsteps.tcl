@@ -4,8 +4,8 @@
 global COLLISIONS
 global wire1Points
 global wire2Points
-#set fileId [open "input.txt"]
-set fileId [open "test.txt"]
+set fileId [open "input.txt"]
+#set fileId [open "test.txt"]
 seek $fileId 0 start
 
 # Need to use coordinates (x,y). Right will add to x, Left will subtract from x. Up will add to x, down will subtract from x.
@@ -25,7 +25,8 @@ set y 0
 
 set wire1Pts(0,x) 0
 set wire1Pts(0,y) 0
-set wire1Pts(0,step) null
+set wire1Pts(0,step) 0
+set acca 0
 for {set i 0} {$i < [llength $wire1]} {incr i} {
 
 	set instr [lindex $wire1 $i]
@@ -35,23 +36,22 @@ for {set i 0} {$i < [llength $wire1]} {incr i} {
 		{D} {set y [expr $y - [string range $instr 1 end]]}
 		{U} {set y [expr $y + [string range $instr 1 end]]}
 	}
-	
+	set acca [expr $acca + [string range $instr 1 end]]
 	
 	set wire1Pts([expr $i + 1],x) $x
 	set wire1Pts([expr $i + 1],y) $y
-	set wire1Pts([expr $i + 1],step) [string range $instr 1 end]
-	#puts $wire1Pts([expr $i + 1],x)
+	set wire1Pts([expr $i + 1],step) $acca
 	#puts $wire1Pts([expr $i + 1],y)
-
+#puts "wire1Acca: $acca"
 }
 
 set wire2 [split [gets $fileId] ","]
 set x 0
 set y 0
-
+set acca 0
 set wire2Pts(0,x) 0
 set wire2Pts(0,y) 0
-set wire2Pts(0,step) null
+set wire2Pts(0,step) 0
 
 
 for {set i 0} {$i < [llength $wire2]} {incr i} {
@@ -63,20 +63,22 @@ for {set i 0} {$i < [llength $wire2]} {incr i} {
 		{D} {set y [expr $y - [string range $instr 1 end]]}
 		{U} {set y [expr $y + [string range $instr 1 end]]}
 	}
-
+	set acca [expr $acca + [string range $instr 1 end]]
 	set wire2Pts([expr $i + 1],x) $x
 	set wire2Pts([expr $i + 1],y) $y	
-	set wire2Pts([expr $i + 1],step) [string range $instr 1 end]
-}
-
-foreach id [array names wire1Pts] {
-	puts "Wire 1 $id: $wire1Pts($id)"	
+	set wire2Pts([expr $i + 1],step) $acca
+#puts "wire2Acca: $acca"
 }
 
 
-foreach id2 [array names wire2Pts] {
-	puts "Wire 2 $id2: $wire2Pts($id2)"	
-}
+#foreach id [array names wire1Pts] {
+#	puts "Wire 1 $id: $wire1Pts($id)"	
+#}
+
+
+#foreach id2 [array names wire2Pts] {
+#	puts "Wire 2 $id2: $wire2Pts($id2)"	
+#}
 
 
 
@@ -84,21 +86,24 @@ foreach id2 [array names wire2Pts] {
 set w1p1 [list]
 set w1p2 [list]
 set COLLISIONS [list]
+set STEPS [list]
 set w2p1 [list]
 set w2p2 [list]
+
+
+
 #puts "[expr [array size wire1Pts] / 2]"
-for {set i 0} {$i < ([expr [array size wire1Pts] / 2]) - 1} {incr i} {
+for {set i 0} {$i < ([expr [array size wire1Pts] / 3]) - 1} {incr i} {
 	#puts $i
 	set w1p1 [list "$wire1Pts($i,x)" "$wire1Pts($i,y)"]
 	set w1p2 [list "$wire1Pts([expr $i + 1],x)" "$wire1Pts([expr $i + 1],y)"]
-	#puts "l1p1: [lindex $w1p1 0], [lindex $w1p1 1]"
-#	puts "l1p2: [lindex $w1p2 0], [lindex $w1p2 1]"
-#	
-	for {set j 0} {$j < ([expr [array size wire2Pts] / 2]) - 1} {incr j} {
+	set step1 $wire1Pts([expr $i],step)
+	#puts "l1 steps $step1"
+	for {set j 0} {$j < ([expr [array size wire2Pts] / 3]) - 1} {incr j} {
 		set w2p1 [list "$wire2Pts($j,x)" "$wire2Pts($j,y)"]
 		set w2p2 [list "$wire2Pts([expr $j + 1],x)" "$wire2Pts([expr $j + 1],y)"]
-		
-		
+		set step2 $wire2Pts([expr $j],step)
+	#	puts "l2 steps $step2"
 	#	puts "([lindex $w2p1 0],[lindex $w2p1 1]) --> ([lindex $w2p2 0],[lindex $w2p2 1])" 
 		#if the first line has a  y that  is fixed then we have a horizontal line, so we check the second lines Y interval to see if the fixed Y falls in that range - if it does then it's an intersect
 		#? do we need to check the X falls within this bounday as well
@@ -119,12 +124,15 @@ for {set i 0} {$i < ([expr [array size wire1Pts] / 2]) - 1} {incr i} {
 				continue
 			}
 			if {$intersecty > $w2minY && $intersecty < $w2maxY} {
-	#			puts "Vertical Collision at Wire 1([lindex $w1p1 0],[lindex $w1p1 1]), ([lindex $w1p2 0],[lindex $w1p2 1]),and Wire2([lindex $w2p1 0],[lindex $w2p1 1]), ([lindex $w2p2 0],[lindex $w2p2 1])"
+				puts "Vertical Collision at Wire 1([lindex $w1p1 0],[lindex $w1p1 1]), ([lindex $w1p2 0],[lindex $w1p2 1]),and Wire2([lindex $w2p1 0],[lindex $w2p1 1]), ([lindex $w2p2 0],[lindex $w2p2 1])"
 				
 			#	puts "Intersect at ([lindex $w2p1 0],$intersecty)"
 				set COLLISIONS [concat $COLLISIONS "[expr abs(( 0 - abs([lindex $w2p1 0])) + ( 0 - abs($intersecty)))]"]
-
-			}
+	#			set STEPS [concat $STEPS [expr ($step1 + abs($intersecty)) + (abs($intersecty) + $step2)]]
+				set x [expr $step2 + abs($intersecty - [lindex $w2p1 1])]
+				set y [expr $step1 + abs([lindex $w2p1 0] - [lindex $w1p1 0])]
+				set STEPS [concat $STEPS [expr $x + $y]]
+		}
 
 		}
 		# IF Wire 1 x is fixed then we have a vertical line, so we check the value of w2's x for intersect
@@ -152,10 +160,15 @@ for {set i 0} {$i < ([expr [array size wire1Pts] / 2]) - 1} {incr i} {
 	
 		#puts "Intersect at ($w1x,[lindex $w2p1 1])"
 	
-	#puts "Horizontal Collision at Wire1:([lindex $w1p1 0],[lindex $w1p1 1]), ([lindex $w1p2 0],[lindex $w1p2 1]) and Wire2:([lindex $w2p1 0],[lindex $w2p1 1]), ([lindex $w2p2 0],[lindex $w2p2 1])"
+	puts "Horizontal Collision at Wire1:([lindex $w1p1 0],[lindex $w1p1 1]), ([lindex $w1p2 0],[lindex $w1p2 1]) and Wire2:([lindex $w2p1 0],[lindex $w2p1 1]), ([lindex $w2p2 0],[lindex $w2p2 1])"
 				set COLLISIONS [concat $COLLISIONS "[expr abs(( 0 - abs($w1x)) + ( 0 - abs([lindex $w2p1 1])))]"] 
-	
-			}
+	#			puts "$step2 + abs($w1x - [lindex $w2p1 0])"
+	#			puts "$step1 + abs([lindex $w2p1 1] - [lindex $w1p1 1])"
+
+				set x [expr $step2 + abs($w1x - [lindex $w2p1 0])]
+				set y [expr $step1 + abs([lindex $w2p1 1] - [lindex $w1p1 1])]
+				set STEPS [concat $STEPS [expr $x + $y]]
+}
 
 		}
 
@@ -164,7 +177,7 @@ for {set i 0} {$i < ([expr [array size wire1Pts] / 2]) - 1} {incr i} {
 	
 		
 }
-puts $COLLISIONS
+puts [lsort $STEPS]
 	
 #set ans 0
 #
